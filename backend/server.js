@@ -10,7 +10,8 @@ const io = socketIo(server, {
   cors: {
     origin: [
       "http://localhost:3000",
-      "https://real-time-chat-application-assignme.vercel.app"
+      "https://real-time-chat-application-assignme.vercel.app",
+      "https://real-time-chat-applic-git-a9bd83-mansi-dixits-projects-3335e2da.vercel.app"
     ],
     methods: ["GET", "POST"]
   }
