@@ -31,7 +31,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [typingUsers, setTypingUsers] = useState<TypingStatus[]>([]);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5000');
+    const newSocket = io('https://real-time-chat-application-assignment.onrender.com');
     setSocket(newSocket);
 
     newSocket.on('message', (message: Message) => {
