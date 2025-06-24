@@ -15,20 +15,15 @@ import {
   useColorModeValue,
   keyframes
 } from '@chakra-ui/react';
-import { FaUserAstronaut } from 'react-icons/fa';
+import { FaUserCircle } from 'react-icons/fa';
 import { useSocket } from '../context/SocketContext';
 
-const gradient = keyframes`
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
-interface LoginProps {
-  onLogin: () => void;
-}
-
-export const Login: React.FC<LoginProps> = ({ onLogin }) => {
+export const Login: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const { login } = useSocket();
   const toast = useToast();
@@ -40,8 +35,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       onLogin();
     } else {
       toast({
-        title: 'Username is required',
-        description: 'Please enter a cool name to join the chat!',
+        title: 'Username is required.',
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -49,8 +43,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
-  const animation = `${gradient} 15s ease infinite`;
-  const glassBg = useColorModeValue('rgba(255, 255, 255, 0.2)', 'rgba(20, 20, 20, 0.2)');
+  const formBg = useColorModeValue('rgba(255, 255, 255, 0.5)', 'rgba(0, 0, 0, 0.5)');
+  const inputBg = useColorModeValue('rgba(255, 255, 255, 0.7)', 'rgba(0, 0, 0, 0.7)');
+  const textColor = useColorModeValue('gray.800', 'white');
 
   return (
     <Flex
@@ -58,59 +53,60 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       h="100vh"
       align="center"
       justify="center"
-      bg="linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)"
-      backgroundSize="400% 400%"
-      animation={animation}
+      backgroundImage="url('https://images.unsplash.com/photo-1489599849927-2ee91e3464ca?q=80&w=2070&auto=format&fit=crop')"
+      backgroundSize="cover"
+      backgroundPosition="center"
     >
       <Box
         p={10}
-        maxWidth="420px"
+        maxWidth="450px"
         borderRadius={20}
-        boxShadow="xl"
-        bg={glassBg}
-        backdropFilter="blur(10px)"
-        border="1px solid rgba(255, 255, 255, 0.18)"
+        boxShadow="2xl"
+        bg={formBg}
+        backdropFilter="blur(15px) saturate(180%)"
+        border="1px solid rgba(255, 255, 255, 0.1)"
         w="full"
+        animation={`${fadeIn} 0.7s ease-out`}
       >
         <VStack spacing={6} as="form" onSubmit={handleSubmit}>
-          <Icon as={FaUserAstronaut} w={20} h={20} color="white" />
-          <Heading size="xl" color="white" fontWeight="bold">Join the Cosmos</Heading>
-          <Text fontSize="lg" color="whiteAlpha.800" textAlign="center">
-            Enter your call sign to start chatting across the galaxy.
+          <Heading size="xl" color={textColor} fontWeight="600">
+            Welcome Back
+          </Heading>
+          <Text fontSize="md" color={textColor} textAlign="center">
+            Enter your name to start chatting with your team.
           </Text>
           <FormControl isRequired>
             <InputGroup>
               <InputLeftElement pointerEvents="none">
-                <Icon as={FaUserAstronaut} color="whiteAlpha.600" />
+                <Icon as={FaUserCircle} color={useColorModeValue('gray.500', 'gray.300')} />
               </InputLeftElement>
               <Input
-                placeholder="Your awesome username"
+                placeholder="Your Name"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 size="lg"
-                borderRadius="full"
-                bg="whiteAlpha.300"
-                color="white"
-                borderColor="whiteAlpha.400"
-                _placeholder={{ color: 'whiteAlpha.700' }}
-                _hover={{ borderColor: 'whiteAlpha.600' }}
-                focusBorderColor="white"
+                borderRadius="lg"
+                bg={inputBg}
+                color={textColor}
+                borderColor={useColorModeValue('gray.300', 'gray.600')}
+                _placeholder={{ color: useColorModeValue('gray.500', 'gray.300') }}
+                focusBorderColor={useColorModeValue('blue.400', 'blue.300')}
               />
             </InputGroup>
           </FormControl>
           <Button
-            colorScheme="whiteAlpha"
-            variant="outline"
+            bg={useColorModeValue('blue.500', 'blue.400')}
+            color="white"
             width="full"
             type="submit"
             size="lg"
-            borderRadius="full"
+            borderRadius="lg"
             fontWeight="bold"
             fontSize="lg"
-            color="white"
-            _hover={{ bg: 'whiteAlpha.200' }}
+            _hover={{ bg: useColorModeValue('blue.600', 'blue.500') }}
+            boxShadow="lg"
           >
-            Launch
+            Join Chat
           </Button>
         </VStack>
       </Box>
