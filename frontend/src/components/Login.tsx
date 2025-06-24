@@ -7,7 +7,14 @@ import {
   VStack,
   Heading,
   useToast,
+  Text,
+  Avatar,
+  InputGroup,
+  InputLeftElement,
+  Flex,
+  Icon,
 } from '@chakra-ui/react';
+import { FaUserCircle } from 'react-icons/fa';
 import { useSocket } from '../context/SocketContext';
 
 interface LoginProps {
@@ -36,42 +43,58 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <Box
-      w="100%"
+    <Flex
+      w="100vw"
       h="100vh"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      bg="gray.50"
+      align="center"
+      justify="center"
+      bgGradient="linear(to-br, blue.400, purple.500, pink.300)"
     >
       <Box
-        p={8}
+        p={10}
         maxWidth="400px"
-        borderWidth={1}
-        borderRadius={8}
-        boxShadow="lg"
-        bg="white"
+        borderRadius={16}
+        boxShadow="2xl"
+        bg="whiteAlpha.900"
+        w="full"
       >
-        <VStack spacing={4} as="form" onSubmit={handleSubmit}>
-          <Heading size="lg">Join Chat</Heading>
+        <VStack spacing={6} as="form" onSubmit={handleSubmit}>
+          <Avatar size="2xl" bg="blue.500" icon={<Icon as={FaUserCircle} w={12} h={12} />} />
+          <Heading size="lg" color="blue.700">Welcome to ChatApp</Heading>
+          <Text fontSize="md" color="gray.600" textAlign="center">
+            Enter your username to join the conversation and connect with others in real time.
+          </Text>
           <FormControl isRequired>
-            <Input
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              size="lg"
-            />
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <Icon as={FaUserCircle} color="gray.400" boxSize={6} />
+              </InputLeftElement>
+              <Input
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                size="lg"
+                borderRadius="full"
+                bg="white"
+                boxShadow="sm"
+              />
+            </InputGroup>
           </FormControl>
           <Button
             colorScheme="blue"
             width="full"
             type="submit"
             size="lg"
+            borderRadius="full"
+            boxShadow="md"
+            fontWeight="bold"
+            fontSize="lg"
+            _hover={{ bg: 'blue.600' }}
           >
-            Join
+            Join Chat
           </Button>
         </VStack>
       </Box>
-    </Box>
+    </Flex>
   );
 }; 

@@ -10,17 +10,24 @@ import {
   Flex,
   useColorMode,
   Button,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverBody,
 } from '@chakra-ui/react';
-import { ArrowForwardIcon, MoonIcon, SunIcon, AddIcon } from '@chakra-ui/icons';
+import { ArrowForwardIcon, MoonIcon, SunIcon, AddIcon, EmojiIcon } from '@chakra-ui/icons';
 import { useSocket } from '../context/SocketContext';
 import { ChatMessage } from './ChatMessage';
 import { UserList } from './UserList';
+import { Picker } from 'emoji-mart';
+import 'emoji-mart/css/emoji-mart.css';
 
 let typingTimeout: NodeJS.Timeout;
 
 export const Chat: React.FC = () => {
   const { messages, users, typingUsers, sendMessage, setTyping, socket } = useSocket();
   const [newMessage, setNewMessage] = useState('');
+  const [showEmoji, setShowEmoji] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
@@ -58,8 +65,17 @@ export const Chat: React.FC = () => {
     }, 1000);
   };
 
+  const handleEmojiSelect = (emoji: any) => {
+    setNewMessage((prev) => prev + emoji.native);
+    setShowEmoji(false);
+  };
+
   // Get current username for isOwnMessage
   const currentUser = users.find(u => u.id === socket?.id)?.username;
+
+  // Animated typing indicator
+  const typingUsernames = typingUsers.filter(t => t.isTyping && t.user !== currentUser).map(t => t.user);
+  const isSomeoneTyping = typingUsernames.length > 0;
 
   return (
     <Flex h="100vh" direction={{ base: 'column', md: 'row' }} bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
@@ -85,14 +101,40 @@ export const Chat: React.FC = () => {
               isOwnMessage={message.user === currentUser}
             />
           ))}
+          {/* Typing indicator */}
+          {isSomeoneTyping && (
+            <Box pb={2} pl={2}>
+              <HStack>
+                <Text fontSize="sm" color="blue.400" fontWeight="medium">
+                  {typingUsernames.join(', ')} {typingUsernames.length > 1 ? 'are' : 'is'} typing
+                </Text>
+                <Box display="inline-block" ml={1}>
+                  <span className="typing-dots">
+                    <span>.</span>
+                    <span>.</span>
+                    <span>.</span>
+                  </span>
+                </Box>
+              </HStack>
+            </Box>
+          )}
           <div ref={messagesEndRef} />
         </VStack>
         {/* Input */}
         <Box px={4} py={3} bg={colorMode === 'dark' ? 'gray.900' : 'gray.100'} boxShadow="md" position="sticky" bottom={0} zIndex={10}>
           <form onSubmit={handleSend}>
             <HStack spacing={2}>
-              {/* Emoji picker placeholder */}
-              <IconButton icon={<AddIcon />} aria-label="Add emoji" variant="ghost" size="lg" />
+              {/* Emoji picker */}
+              <Popover isOpen={showEmoji} onClose={() => setShowEmoji(false)} placement="top-start">
+                <PopoverTrigger>
+                  <IconButton icon={<span role="img" aria-label="emoji">😊</span>} aria-label="Add emoji" variant="ghost" size="lg" onClick={() => setShowEmoji((v) => !v)} />
+                </PopoverTrigger>
+                <PopoverContent w="auto" borderRadius="xl" boxShadow="xl">
+                  <PopoverBody p={0}>
+                    <Picker onSelect={handleEmojiSelect} theme={colorMode} showPreview={false} showSkinTones={false} style={{ border: 'none', boxShadow: 'none' }} />
+                  </PopoverBody>
+                </PopoverContent>
+              </Popover>
               <Input
                 value={newMessage}
                 onChange={handleTyping}
