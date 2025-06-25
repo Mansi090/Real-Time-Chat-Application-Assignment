@@ -92,4 +92,4 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage 
       </Box>
     </HStack>
   );
-}; 
+};

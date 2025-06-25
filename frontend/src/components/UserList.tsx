@@ -1,11 +1,18 @@
 import React from 'react';
 import { Box, VStack, Text, Badge, Avatar, HStack, useColorModeValue } from '@chakra-ui/react';
+import { keyframes } from '@emotion/react';
 import { User, TypingStatus } from '../types';
 
 interface UserListProps {
   users: User[];
   typingUsers: TypingStatus[];
 }
+
+const pulse = keyframes`
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+`;
 
 export const UserList: React.FC<UserListProps> = ({ users, typingUsers }) => {
   const bgGradient = useColorModeValue(
@@ -58,7 +65,7 @@ export const UserList: React.FC<UserListProps> = ({ users, typingUsers }) => {
       <VStack align="stretch" spacing={3}>
         {users.map((user) => {
           const avatarUrl = `https://api.dicebear.com/7.x/thumbs/svg?seed=${encodeURIComponent(user.username)}`;
-          const isTyping = typingUsers.some((typing) => typing.user === user.username);
+          const isTyping = typingUsers.some((typing) => typing.user === user.username && typing.isTyping);
           return (
             <HStack
               key={user.id}
@@ -107,7 +114,7 @@ export const UserList: React.FC<UserListProps> = ({ users, typingUsers }) => {
                   borderRadius="full"
                   px={2}
                   fontSize="0.6em"
-                  animation="pulse 1.5s infinite"
+                  animation={`${pulse} 1.5s infinite`}
                 >
                   typing...
                 </Badge>
@@ -118,4 +125,4 @@ export const UserList: React.FC<UserListProps> = ({ users, typingUsers }) => {
       </VStack>
     </Box>
   );
-}; 
+};

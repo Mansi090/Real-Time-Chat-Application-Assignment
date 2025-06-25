@@ -15,12 +15,8 @@ import {
   PopoverContent,
   PopoverBody,
   useColorModeValue,
-  Icon,
-  Avatar,
-  Tooltip,
 } from '@chakra-ui/react';
-import { ArrowForwardIcon, MoonIcon, SunIcon } from '@chakra-ui/icons';
-import { FaSmile, FaPaperclip } from 'react-icons/fa';
+import { ArrowForwardIcon, MoonIcon, SunIcon, AddIcon } from '@chakra-ui/icons';
 import { useSocket } from '../context/SocketContext';
 import { ChatMessage } from './ChatMessage';
 import { UserList } from './UserList';
@@ -35,24 +31,35 @@ export const Chat: React.FC = () => {
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
 
-  // Color values at the top level
+  // Modern color scheme
   const bgGradient = useColorModeValue(
-    'linear(to-br, #667eea 0%, #764ba2 100%)',
-    'linear(to-br, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
   );
-  const chatBg = useColorModeValue('rgba(255, 255, 255, 0.95)', 'rgba(26, 32, 44, 0.95)');
-  const inputBg = useColorModeValue('rgba(255, 255, 255, 0.9)', 'rgba(45, 55, 72, 0.9)');
-  const sidebarBg = useColorModeValue('rgba(255, 255, 255, 0.8)', 'rgba(26, 32, 44, 0.8)');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'whiteAlpha.900');
+  const chatBg = useColorModeValue(
+    'rgba(255, 255, 255, 0.95)',
+    'rgba(26, 32, 44, 0.95)'
+  );
+  const headerBg = useColorModeValue(
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #2d3748 0%, #4a5568 100%)'
+  );
+  const inputBg = useColorModeValue(
+    'rgba(255, 255, 255, 0.9)',
+    'rgba(45, 55, 72, 0.9)'
+  );
+  const sidebarBg = useColorModeValue(
+    'rgba(255, 255, 255, 0.8)',
+    'rgba(26, 32, 44, 0.8)'
+  );
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // const scrollToBottom = () => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [messages]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +91,10 @@ export const Chat: React.FC = () => {
     setShowEmoji(false);
   };
 
+  // Get current username for isOwnMessage
   const currentUser = users.find(u => u.id === socket?.id)?.username;
+
+  // Animated typing indicator
   const typingUsernames = typingUsers.filter(t => t.isTyping && t.user !== currentUser).map(t => t.user);
   const isSomeoneTyping = typingUsernames.length > 0;
 
@@ -130,11 +140,8 @@ export const Chat: React.FC = () => {
       {/* Sidebar/UserList */}
       <Box 
         display={{ base: 'none', md: 'block' }}
-        w="300px"
-        borderRight="1px solid"
-        borderColor={borderColor}
-        bg={sidebarBg}
-        backdropFilter="blur(15px)"
+        position="relative"
+        zIndex="1"
       >
         <UserList users={users} typingUsers={typingUsers} />
       </Box>
@@ -152,12 +159,12 @@ export const Chat: React.FC = () => {
           align="center" 
           justify="space-between" 
           px={6} 
-          py={4}
-          bg="rgba(255,255,255,0.1)"
-          backdropFilter="blur(15px)"
-          borderBottom="1px solid"
-          borderColor={borderColor}
-          boxShadow="sm"
+          py={4} 
+          bg={headerBg}
+          color="white" 
+          boxShadow="0 4px 20px rgba(0,0,0,0.1)"
+          backdropFilter="blur(20px)"
+          borderBottom="1px solid rgba(255,255,255,0.1)"
         >
           <Text 
             fontSize="2xl" 
@@ -193,7 +200,7 @@ export const Chat: React.FC = () => {
           spacing={2} 
           align="stretch" 
           bg={chatBg}
-          backdropFilter="blur(15px)"
+          backdropFilter="blur(20px)"
           overflowY="auto"
           sx={{
             '&::-webkit-scrollbar': {
@@ -207,6 +214,9 @@ export const Chat: React.FC = () => {
               background: 'rgba(0,0,0,0.3)',
               borderRadius: '3px',
             },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: 'rgba(0,0,0,0.5)',
+            },
           }}
         >
           {messages.map((message) => (
@@ -216,7 +226,7 @@ export const Chat: React.FC = () => {
               isOwnMessage={message.user === currentUser}
             />
           ))}
-          
+          {/* Typing indicator */}
           {isSomeoneTyping && (
             <Box pb={2} pl={2}>
               <HStack>
@@ -239,9 +249,9 @@ export const Chat: React.FC = () => {
         {/* Input */}
         <Box 
           px={4} 
-          py={3}
+          py={3} 
           bg={inputBg}
-          backdropFilter="blur(15px)"
+          backdropFilter="blur(20px)"
           boxShadow="0 -4px 20px rgba(0,0,0,0.1)"
           position="sticky" 
           bottom={0} 
@@ -254,7 +264,7 @@ export const Chat: React.FC = () => {
               <Popover isOpen={showEmoji} onClose={() => setShowEmoji(false)} placement="top-start">
                 <PopoverTrigger>
                   <IconButton 
-                    icon={<Icon as={FaSmile as React.ComponentType} />}
+                    icon={<span role="img" aria-label="emoji">😊</span>} 
                     aria-label="Add emoji" 
                     variant="ghost" 
                     size="lg" 
@@ -267,7 +277,7 @@ export const Chat: React.FC = () => {
                 <PopoverContent w="auto" borderRadius="xl" boxShadow="xl" bg="rgba(255,255,255,0.95)" backdropFilter="blur(20px)">
                   <PopoverBody p={3}>
                     <HStack spacing={2} wrap="wrap" maxW="240px">
-                      {['😊', '😂', '❤️', '👍', '🎉', '🔥', '😎', '🤔'].map((emoji) => (
+                      {['😊', '😂', '❤️', '👍', '🎉', '🔥', '😎', '🤔', '😢', '😡', '👋', '💪', '🎯', '⭐', '💯', '🚀', '🌈', '✨', '🎨', '🎭', '🎪', '🎲', '🎮', '🎸', '🎹', '🎺', '🎻', '🎼', '🎤', '🎧', '🎵'].map((emoji) => (
                         <Button
                           key={emoji}
                           size="sm"
@@ -286,14 +296,13 @@ export const Chat: React.FC = () => {
                   </PopoverBody>
                 </PopoverContent>
               </Popover>
-
               <Input
                 value={newMessage}
                 onChange={handleTyping}
                 placeholder="Type a message..."
                 size="lg"
-                bg={inputBg}
-                color={textColor}
+                bg={useColorModeValue('rgba(255,255,255,0.9)', 'rgba(45,55,72,0.9)')}
+                color={useColorModeValue('gray.800', 'white')}
                 borderRadius="full"
                 boxShadow="0 2px 10px rgba(0,0,0,0.1)"
                 border="1px solid rgba(255,255,255,0.3)"
@@ -301,8 +310,8 @@ export const Chat: React.FC = () => {
                   boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
                   borderColor: 'purple.400',
                 }}
+                _placeholder={{ color: useColorModeValue('gray.500', 'gray.300') }}
               />
-
               <IconButton
                 colorScheme="purple"
                 aria-label="Send message"
