@@ -3,6 +3,8 @@ export interface Message {
   text: string;
   user: string;
   timestamp: string;
+  reactions?: { emoji: string; users: string[] }[];
+  replyTo?: number;
 }
 
 export interface User {

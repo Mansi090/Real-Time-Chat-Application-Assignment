@@ -20,6 +20,9 @@ import { ArrowForwardIcon, MoonIcon, SunIcon, AddIcon } from '@chakra-ui/icons';
 import { useSocket } from '../context/SocketContext';
 import { ChatMessage } from './ChatMessage';
 import { UserList } from './UserList';
+import EmojiPicker from 'emoji-picker-react';
+import { Theme } from 'emoji-picker-react';
+import { Message } from '../types';
 
 let typingTimeout: NodeJS.Timeout;
 
@@ -27,9 +30,12 @@ export const Chat: React.FC = () => {
   const { messages, users, typingUsers, sendMessage, setTyping, socket } = useSocket();
   const [newMessage, setNewMessage] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
+  const [replyTo, setReplyTo] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const [userJoinTime] = useState(() => new Date().toISOString());
 
   // Modern color scheme
   const bgGradient = useColorModeValue(
@@ -53,28 +59,26 @@ export const Chat: React.FC = () => {
     'rgba(26, 32, 44, 0.8)'
   );
 
-  // const scrollToBottom = () => {
-  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  // };
-
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [messages]);
+  // Scroll to bottom when messages or users change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, users]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (newMessage.trim()) {
-      sendMessage(newMessage.trim());
+      if (replyTo) {
+        // Fallback: prepend reply as quote in text, then a blank line
+        const replyMsg = messages.find(m => m.id === replyTo);
+        const quoted = replyMsg ? `@${replyMsg.user}: ${replyMsg.text}\n\n` : '';
+        sendMessage(quoted + newMessage.trim());
+      } else {
+        sendMessage(newMessage.trim());
+      }
       setNewMessage('');
-    } else {
-      toast({
-        title: 'Empty message',
-        description: 'Please enter a message to send',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      setReplyTo(null);
     }
+    // If empty, do nothing
   };
 
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,10 +90,23 @@ export const Chat: React.FC = () => {
     }, 1000);
   };
 
-  const handleEmojiSelect = (emoji: string) => {
-    setNewMessage((prev) => prev + emoji);
+  const handleEmojiSelect = (emojiData: any) => {
+    setNewMessage((prev) => prev + emojiData.emoji);
     setShowEmoji(false);
   };
+
+  // Reply logic
+  const handleReply = (id: number) => {
+    setReplyTo(id);
+    // Optionally scroll to the message being replied to
+    const el = document.getElementById(`message-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  // Cancel reply
+  const cancelReply = () => setReplyTo(null);
 
   // Get current username for isOwnMessage
   const currentUser = users.find(u => u.id === socket?.id)?.username;
@@ -97,6 +114,9 @@ export const Chat: React.FC = () => {
   // Animated typing indicator
   const typingUsernames = typingUsers.filter(t => t.isTyping && t.user !== currentUser).map(t => t.user);
   const isSomeoneTyping = typingUsernames.length > 0;
+
+  // Find the message being replied to
+  const replyMessage = replyTo ? messages.find(m => m.id === replyTo) : null;
 
   return (
     <Flex 
@@ -224,6 +244,10 @@ export const Chat: React.FC = () => {
               key={message.id}
               message={message}
               isOwnMessage={message.user === currentUser}
+              onReply={handleReply}
+              replyTo={message.replyTo}
+              messages={messages}
+              userJoinTime={userJoinTime}
             />
           ))}
           {/* Typing indicator */}
@@ -258,44 +282,42 @@ export const Chat: React.FC = () => {
           zIndex={10}
           borderTop="1px solid rgba(255,255,255,0.1)"
         >
+          {/* Reply preview */}
+          {replyMessage && (
+            <Box mb={2} p={2} borderLeft="4px solid #805ad5" bg="rgba(128,90,213,0.08)" borderRadius="md" display="flex" alignItems="center" justifyContent="space-between">
+              <Box>
+                <Text fontSize="xs" color="purple.500" fontWeight="bold">Replying to {replyMessage.user}</Text>
+                <Text fontSize="sm" color="gray.700" noOfLines={1}>{replyMessage.text}</Text>
+              </Box>
+              <IconButton size="xs" ml={2} icon={<span>&times;</span>} aria-label="Cancel reply" onClick={cancelReply} />
+            </Box>
+          )}
           <form onSubmit={handleSend}>
             <HStack spacing={3}>
               {/* Emoji picker */}
-              <Popover isOpen={showEmoji} onClose={() => setShowEmoji(false)} placement="top-start">
-                <PopoverTrigger>
-                  <IconButton 
-                    icon={<span role="img" aria-label="emoji">😊</span>} 
-                    aria-label="Add emoji" 
-                    variant="ghost" 
-                    size="lg" 
-                    onClick={() => setShowEmoji((v) => !v)}
-                    bg="rgba(255,255,255,0.2)"
-                    _hover={{ bg: 'rgba(255,255,255,0.3)' }}
-                    borderRadius="full"
-                  />
-                </PopoverTrigger>
-                <PopoverContent w="auto" borderRadius="xl" boxShadow="xl" bg="rgba(255,255,255,0.95)" backdropFilter="blur(20px)">
-                  <PopoverBody p={3}>
-                    <HStack spacing={2} wrap="wrap" maxW="240px">
-                      {['😊', '😂', '❤️', '👍', '🎉', '🔥', '😎', '🤔', '😢', '😡', '👋', '💪', '🎯', '⭐', '💯', '🚀', '🌈', '✨', '🎨', '🎭', '🎪', '🎲', '🎮', '🎸', '🎹', '🎺', '🎻', '🎼', '🎤', '🎧', '🎵'].map((emoji) => (
-                        <Button
-                          key={emoji}
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEmojiSelect(emoji)}
-                          fontSize="lg"
-                          p={1}
-                          minW="auto"
-                          _hover={{ bg: 'rgba(0,0,0,0.1)' }}
-                          borderRadius="md"
-                        >
-                          {emoji}
-                        </Button>
-                      ))}
-                    </HStack>
-                  </PopoverBody>
-                </PopoverContent>
-              </Popover>
+              <Box position="relative" ref={emojiPickerRef}>
+                <IconButton 
+                  icon={<span role="img" aria-label="emoji">😊</span>} 
+                  aria-label="Add emoji" 
+                  variant="ghost" 
+                  size="lg" 
+                  onClick={() => setShowEmoji((v) => !v)}
+                  bg="rgba(255,255,255,0.2)"
+                  _hover={{ bg: 'rgba(255,255,255,0.3)' }}
+                  borderRadius="full"
+                />
+                {showEmoji && (
+                  <Box position="absolute" bottom="50px" left={0} zIndex={1000} boxShadow="xl">
+                    <EmojiPicker
+                      onEmojiClick={handleEmojiSelect}
+                      theme={colorMode === 'dark' ? Theme.DARK : Theme.LIGHT}
+                      width={350}
+                      height={400}
+                      autoFocusSearch
+                    />
+                  </Box>
+                )}
+              </Box>
               <Input
                 value={newMessage}
                 onChange={handleTyping}
@@ -353,6 +375,14 @@ export const Chat: React.FC = () => {
         @keyframes typing {
           0%, 60%, 100% { transform: translateY(0); }
           30% { transform: translateY(-10px); }
+        }
+        @keyframes shake {
+          0% { transform: translateX(0); }
+          20% { transform: translateX(-5px); }
+          40% { transform: translateX(5px); }
+          60% { transform: translateX(-5px); }
+          80% { transform: translateX(5px); }
+          100% { transform: translateX(0); }
         }
       `}</style>
     </Flex>
