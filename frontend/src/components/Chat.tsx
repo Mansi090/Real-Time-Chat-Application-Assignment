@@ -14,13 +14,16 @@ import {
   PopoverTrigger,
   PopoverContent,
   PopoverBody,
+  useColorModeValue,
+  Icon,
+  Avatar,
+  Tooltip,
 } from '@chakra-ui/react';
-import { ArrowForwardIcon, MoonIcon, SunIcon, AddIcon, EmojiIcon } from '@chakra-ui/icons';
+import { ArrowForwardIcon, MoonIcon, SunIcon } from '@chakra-ui/icons';
+import { FaSmile, FaPaperclip } from 'react-icons/fa';
 import { useSocket } from '../context/SocketContext';
 import { ChatMessage } from './ChatMessage';
 import { UserList } from './UserList';
-import { Picker } from 'emoji-mart';
-import 'emoji-mart/css/emoji-mart.css';
 
 let typingTimeout: NodeJS.Timeout;
 
@@ -31,6 +34,17 @@ export const Chat: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
+
+  // Color values at the top level
+  const bgGradient = useColorModeValue(
+    'linear(to-br, #667eea 0%, #764ba2 100%)',
+    'linear(to-br, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
+  );
+  const chatBg = useColorModeValue('rgba(255, 255, 255, 0.95)', 'rgba(26, 32, 44, 0.95)');
+  const inputBg = useColorModeValue('rgba(255, 255, 255, 0.9)', 'rgba(45, 55, 72, 0.9)');
+  const sidebarBg = useColorModeValue('rgba(255, 255, 255, 0.8)', 'rgba(26, 32, 44, 0.8)');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.800', 'whiteAlpha.900');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -65,35 +79,136 @@ export const Chat: React.FC = () => {
     }, 1000);
   };
 
-  const handleEmojiSelect = (emoji: any) => {
-    setNewMessage((prev) => prev + emoji.native);
+  const handleEmojiSelect = (emoji: string) => {
+    setNewMessage((prev) => prev + emoji);
     setShowEmoji(false);
   };
 
-  // Get current username for isOwnMessage
   const currentUser = users.find(u => u.id === socket?.id)?.username;
-
-  // Animated typing indicator
   const typingUsernames = typingUsers.filter(t => t.isTyping && t.user !== currentUser).map(t => t.user);
   const isSomeoneTyping = typingUsernames.length > 0;
 
   return (
-    <Flex h="100vh" direction={{ base: 'column', md: 'row' }} bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
+    <Flex 
+      h="100vh"
+      minH={0}
+      direction={{ base: 'column', md: 'row' }} 
+      bg={bgGradient}
+      backgroundAttachment="fixed"
+      position="relative"
+      overflow="hidden"
+    >
+      {/* Animated background particles */}
+      <Box
+        position="absolute"
+        top="0"
+        left="0"
+        right="0"
+        bottom="0"
+        opacity="0.1"
+        pointerEvents="none"
+        zIndex="0"
+      >
+        {[...Array(20)].map((_, i) => (
+          <Box
+            key={i}
+            position="absolute"
+            w="4px"
+            h="4px"
+            bg="white"
+            borderRadius="50%"
+            top={`${Math.random() * 100}%`}
+            left={`${Math.random() * 100}%`}
+            animation={`float ${3 + Math.random() * 4}s ease-in-out infinite`}
+            style={{
+              animationDelay: `${Math.random() * 2}s`,
+            }}
+          />
+        ))}
+      </Box>
+
       {/* Sidebar/UserList */}
-      <Box display={{ base: 'none', md: 'block' }}>
+      <Box 
+        display={{ base: 'none', md: 'block' }}
+        w="300px"
+        borderRight="1px solid"
+        borderColor={borderColor}
+        bg={sidebarBg}
+        backdropFilter="blur(15px)"
+      >
         <UserList users={users} typingUsers={typingUsers} />
       </Box>
+
       {/* Main Chat Area */}
-      <Flex flex={1} direction="column" h="100%">
+      <Flex 
+        flex={1} 
+        minH={0}
+        direction="column" 
+        position="relative"
+        zIndex="1"
+      >
         {/* Header */}
-        <Flex align="center" justify="space-between" px={6} py={4} bgGradient="linear(to-r, blue.600, blue.400)" color="white" boxShadow="md">
-          <Text fontSize="2xl" fontWeight="bold" letterSpacing="wide">💬 ChatApp</Text>
-          <HStack spacing={2}>
-            <Button onClick={toggleColorMode} size="sm" leftIcon={colorMode === 'dark' ? <SunIcon /> : <MoonIcon />}>{colorMode === 'dark' ? 'Light' : 'Dark'} Mode</Button>
+        <Flex 
+          align="center" 
+          justify="space-between" 
+          px={6} 
+          py={4}
+          bg="rgba(255,255,255,0.1)"
+          backdropFilter="blur(15px)"
+          borderBottom="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
+        >
+          <Text 
+            fontSize="2xl" 
+            fontWeight="bold" 
+            letterSpacing="wide"
+            bgGradient="linear(to-r, #ffd89b, #19547b)"
+            bgClip="text"
+            textShadow="0 2px 4px rgba(0,0,0,0.3)"
+          >
+            ✨ ChatApp
+          </Text>
+          <HStack spacing={3}>
+            <Button 
+              onClick={toggleColorMode} 
+              size="sm" 
+              leftIcon={colorMode === 'dark' ? <SunIcon /> : <MoonIcon />}
+              bg="rgba(255,255,255,0.2)"
+              _hover={{ bg: 'rgba(255,255,255,0.3)' }}
+              backdropFilter="blur(10px)"
+              border="1px solid rgba(255,255,255,0.2)"
+            >
+              {colorMode === 'dark' ? 'Light' : 'Dark'} Mode
+            </Button>
           </HStack>
         </Flex>
+
         {/* Messages */}
-        <VStack flex={1} px={4} py={2} spacing={2} overflowY="auto" align="stretch" bg={colorMode === 'dark' ? 'gray.800' : 'white'}>
+        <VStack 
+          flex={1} 
+          minH={0}
+          px={4} 
+          py={2} 
+          spacing={2} 
+          align="stretch" 
+          bg={chatBg}
+          backdropFilter="blur(15px)"
+          overflowY="auto"
+          sx={{
+            '&::-webkit-scrollbar': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'rgba(0,0,0,0.1)',
+              borderRadius: '3px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(0,0,0,0.3)',
+              borderRadius: '3px',
+            },
+          }}
+        >
           {messages.map((message) => (
             <ChatMessage
               key={message.id}
@@ -101,11 +216,11 @@ export const Chat: React.FC = () => {
               isOwnMessage={message.user === currentUser}
             />
           ))}
-          {/* Typing indicator */}
+          
           {isSomeoneTyping && (
             <Box pb={2} pl={2}>
               <HStack>
-                <Text fontSize="sm" color="blue.400" fontWeight="medium">
+                <Text fontSize="sm" color="purple.400" fontWeight="medium">
                   {typingUsernames.join(', ')} {typingUsernames.length > 1 ? 'are' : 'is'} typing
                 </Text>
                 <Box display="inline-block" ml={1}>
@@ -120,47 +235,117 @@ export const Chat: React.FC = () => {
           )}
           <div ref={messagesEndRef} />
         </VStack>
+
         {/* Input */}
-        <Box px={4} py={3} bg={colorMode === 'dark' ? 'gray.900' : 'gray.100'} boxShadow="md" position="sticky" bottom={0} zIndex={10}>
+        <Box 
+          px={4} 
+          py={3}
+          bg={inputBg}
+          backdropFilter="blur(15px)"
+          boxShadow="0 -4px 20px rgba(0,0,0,0.1)"
+          position="sticky" 
+          bottom={0} 
+          zIndex={10}
+          borderTop="1px solid rgba(255,255,255,0.1)"
+        >
           <form onSubmit={handleSend}>
-            <HStack spacing={2}>
+            <HStack spacing={3}>
               {/* Emoji picker */}
               <Popover isOpen={showEmoji} onClose={() => setShowEmoji(false)} placement="top-start">
                 <PopoverTrigger>
-                  <IconButton icon={<span role="img" aria-label="emoji">😊</span>} aria-label="Add emoji" variant="ghost" size="lg" onClick={() => setShowEmoji((v) => !v)} />
+                  <IconButton 
+                    icon={<Icon as={FaSmile as React.ComponentType} />}
+                    aria-label="Add emoji" 
+                    variant="ghost" 
+                    size="lg" 
+                    onClick={() => setShowEmoji((v) => !v)}
+                    bg="rgba(255,255,255,0.2)"
+                    _hover={{ bg: 'rgba(255,255,255,0.3)' }}
+                    borderRadius="full"
+                  />
                 </PopoverTrigger>
-                <PopoverContent w="auto" borderRadius="xl" boxShadow="xl">
-                  <PopoverBody p={0}>
-                    <Picker onSelect={handleEmojiSelect} theme={colorMode} showPreview={false} showSkinTones={false} style={{ border: 'none', boxShadow: 'none' }} />
+                <PopoverContent w="auto" borderRadius="xl" boxShadow="xl" bg="rgba(255,255,255,0.95)" backdropFilter="blur(20px)">
+                  <PopoverBody p={3}>
+                    <HStack spacing={2} wrap="wrap" maxW="240px">
+                      {['😊', '😂', '❤️', '👍', '🎉', '🔥', '😎', '🤔'].map((emoji) => (
+                        <Button
+                          key={emoji}
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEmojiSelect(emoji)}
+                          fontSize="lg"
+                          p={1}
+                          minW="auto"
+                          _hover={{ bg: 'rgba(0,0,0,0.1)' }}
+                          borderRadius="md"
+                        >
+                          {emoji}
+                        </Button>
+                      ))}
+                    </HStack>
                   </PopoverBody>
                 </PopoverContent>
               </Popover>
+
               <Input
                 value={newMessage}
                 onChange={handleTyping}
                 placeholder="Type a message..."
                 size="lg"
-                bg={colorMode === 'dark' ? 'gray.800' : 'white'}
-                color={colorMode === 'dark' ? 'white' : 'black'}
+                bg={inputBg}
+                color={textColor}
                 borderRadius="full"
-                boxShadow="sm"
+                boxShadow="0 2px 10px rgba(0,0,0,0.1)"
+                border="1px solid rgba(255,255,255,0.3)"
+                _focus={{
+                  boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+                  borderColor: 'purple.400',
+                }}
               />
+
               <IconButton
-                colorScheme="blue"
+                colorScheme="purple"
                 aria-label="Send message"
                 icon={<ArrowForwardIcon />}
                 type="submit"
                 size="lg"
                 borderRadius="full"
+                bgGradient="linear(to-r, purple.400, pink.400)"
+                _hover={{
+                  bgGradient: 'linear(to-r, purple.500, pink.500)',
+                  transform: 'scale(1.05)',
+                }}
+                boxShadow="0 4px 15px rgba(128, 90, 213, 0.4)"
+                transition="all 0.2s"
               />
             </HStack>
           </form>
         </Box>
       </Flex>
+
       {/* Mobile UserList at bottom */}
-      <Box display={{ base: 'block', md: 'none' }} w="100%" boxShadow="md">
+      <Box display={{ base: 'block', md: 'none' }} w="100%" boxShadow="md" position="relative" zIndex="1">
         <UserList users={users} typingUsers={typingUsers} />
       </Box>
+
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        .typing-dots span {
+          animation: typing 1.4s infinite ease-in-out;
+          display: inline-block;
+          margin: 0 1px;
+        }
+        .typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+          0%, 60%, 100% { transform: translateY(0); }
+          30% { transform: translateY(-10px); }
+        }
+      `}</style>
     </Flex>
   );
-}; 
+};
