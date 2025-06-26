@@ -15,7 +15,7 @@ A modern real-time chat application built with the MERN stack (Node.js, Express,
 
 ## 🚀 Live Demo
 
-You can test the deployed application here: [Link to your Vercel deployment]
+You can test the deployed application here: (https://real-time-chat-application-assignme.vercel.app/)
 
 ## 🛠️ Tech Stack
 
